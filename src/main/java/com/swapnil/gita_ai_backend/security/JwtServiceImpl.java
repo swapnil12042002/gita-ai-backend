@@ -1,9 +1,11 @@
 package com.swapnil.gita_ai_backend.security;
 
+import com.swapnil.gita_ai_backend.config.JwtProperties;
 import com.swapnil.gita_ai_backend.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -12,16 +14,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Service
+@RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
 
-    // We'll move this to application.yml later
-    private static final String SECRET_KEY =
-            "thisIsMySuperSecretKeyForJwtAuthenticationInGitaAI2026";
-
-    private static final long EXPIRATION = 1000 * 60 * 60 * 24; // 24 hours
+    private final JwtProperties jwtProperties;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(
+                jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     @Override
@@ -32,7 +33,7 @@ public class JwtServiceImpl implements JwtService {
                 .claim("userId", user.getId().toString())
                 .claim("provider", user.getProvider().name())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
+                .expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration()))
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -43,7 +44,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public boolean isTokenValid(String token, UserDetails userDetails){
+    public boolean isTokenValid(String token, UserDetails userDetails) {
         return extractEmail(token).equals(userDetails.getUsername())
                 && !extractAllClaims(token).getExpiration().before(new Date());
     }

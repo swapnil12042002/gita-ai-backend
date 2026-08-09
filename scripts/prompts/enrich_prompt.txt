@@ -1,0 +1,42 @@
+You are an expert on the Bhagavad Gita.
+
+Analyze the following verse.
+
+Return ONLY valid JSON.
+
+The JSON must have exactly this structure:
+
+{
+  "summary": "",
+  "keywords": [],
+  "topics": [],
+  "lifeSituations": [],
+  "emotions": [],
+  "questions": []
+}
+
+Rules:
+
+- summary should be 2-3 sentences.
+- keywords should contain 5-10 keywords.
+- topics should contain 2-5 broad spiritual topics.
+- lifeSituations should contain real-world situations where this verse applies.
+- emotions should contain emotions addressed by this verse.
+- questions should contain natural questions a user might ask that this verse answers.
+
+Return ONLY JSON.
+
+Verse:
+
+Chapter: {chapter}
+
+Verse: {verse}
+
+Sanskrit:
+{sanskrit}
+
+Translation:
+{translation}
+
+Commentary:
+{commentary}

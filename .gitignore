@@ -35,3 +35,17 @@ build/
 .env
 
 application-local.yml
+
+# Python
+scripts/.venv/
+scripts/.env
+
+# Spring
+src/main/resources/application.yml
+
+# Python cache
+__pycache__/
+*.pyc
+.env.*
+.venv/
+venv/
