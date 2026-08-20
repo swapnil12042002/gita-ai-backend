@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
                         "timestamp", Instant.now(),
                         "status", 401,
                         "error", "Unauthorized",
-                        "message", "Invalid email or password"
+                        "message", exception.getMessage() != null ? exception.getMessage() : "Invalid email or password"
                 ));
     }
 

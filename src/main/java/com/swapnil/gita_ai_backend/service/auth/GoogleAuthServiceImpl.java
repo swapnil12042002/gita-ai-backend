@@ -16,6 +16,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import java.util.Collections;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -42,7 +43,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             GoogleIdToken idToken = verifier.verify(request.getIdToken());
 
             if (idToken == null) {
-                throw new RuntimeException("Invalid Google token");
+                throw new BadCredentialsException("Invalid Google token");
             }
 
             GoogleIdToken.Payload payload = idToken.getPayload();
@@ -53,13 +54,30 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             String lastName = (String) payload.get("family_name");
             String picture = (String) payload.get("picture");
 
+            if (firstName == null) {
+                firstName = (String) payload.get("name");
+            }
+
+            final String finalFirstName = firstName;
+            final String finalLastName = lastName;
+            final String finalPicture = picture;
+
             User user = userRepository.findByEmail(email)
+                    .map(existingUser -> {
+                        if (existingUser.getGoogleId() == null) {
+                            existingUser.setGoogleId(googleId);
+                        }
+                        if (existingUser.getPicture() == null && finalPicture != null) {
+                            existingUser.setPicture(finalPicture);
+                        }
+                        return userRepository.save(existingUser);
+                    })
                     .orElseGet(() -> {
                         User newUser = User.builder()
-                                .firstName(firstName)
-                                .lastName(lastName)
+                                .firstName(finalFirstName)
+                                .lastName(finalLastName)
                                 .email(email)
-                                .picture(picture)
+                                .picture(finalPicture)
                                 .googleId(googleId)
                                 .provider(AuthProvider.GOOGLE)
                                 .build();
@@ -79,13 +97,15 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                                     .lastName(user.getLastName())
                                     .email(user.getEmail())
                                     .picture(user.getPicture())
-                                    .provider(user.getProvider().name())
+                                    .provider(user.getProvider() != null ? user.getProvider().name() : AuthProvider.GOOGLE.name())
                                     .build()
                     )
                     .build();
 
+        } catch (BadCredentialsException e) {
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Google authentication failed", e);
+            throw new BadCredentialsException("Google authentication failed: " + e.getMessage(), e);
         }
     }
 }
