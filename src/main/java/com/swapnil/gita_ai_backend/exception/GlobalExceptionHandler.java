@@ -70,12 +70,66 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(com.google.genai.errors.ApiException.class)
+    public ResponseEntity<Map<String, Object>> handleGeminiApiException(
+            com.google.genai.errors.ApiException exception) {
+
+        int statusCode = exception.getStatusCode();
+        String message = exception.getMessage();
+
+        if (statusCode == 429 || (message != null && (message.contains("RESOURCE_EXHAUSTED") || message.toLowerCase().contains("quota")))) {
+            return ResponseEntity
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of(
+                            "timestamp", Instant.now(),
+                            "status", 429,
+                            "error", "Too Many Requests",
+                            "message", "Gemini API quota or rate limit exceeded. Please try again later."
+                    ));
+        }
+
+        HttpStatus status = HttpStatus.resolve(statusCode);
+        if (status == null) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+
+        return ResponseEntity
+                .status(status)
+                .body(Map.of(
+                        "timestamp", Instant.now(),
+                        "status", status.value(),
+                        "error", status.getReasonPhrase(),
+                        "message", message != null ? message : "Gemini API error occurred."
+                ));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(
             Exception exception) {
 
         // Keep the actual exception in server logs.
         exception.printStackTrace();
+
+        // Check if root cause or message is quota / rate-limit related
+        String fullMsg = exception.getMessage() != null ? exception.getMessage() : "";
+        Throwable cause = exception.getCause();
+        while (cause != null) {
+            if (cause.getMessage() != null) {
+                fullMsg += " " + cause.getMessage();
+            }
+            cause = cause.getCause();
+        }
+
+        if (fullMsg.contains("429") || fullMsg.contains("RESOURCE_EXHAUSTED") || fullMsg.toLowerCase().contains("quota")) {
+            return ResponseEntity
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of(
+                            "timestamp", Instant.now(),
+                            "status", 429,
+                            "error", "Too Many Requests",
+                            "message", "Gemini API quota or rate limit exceeded. Please try again later."
+                    ));
+        }
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
