@@ -3,6 +3,7 @@ package com.swapnil.gita_ai_backend.controller.user;
 import com.swapnil.gita_ai_backend.entity.User;
 import com.swapnil.gita_ai_backend.repository.BookmarkRepository;
 import com.swapnil.gita_ai_backend.repository.ChatRepository;
+import com.swapnil.gita_ai_backend.repository.MessageRepository;
 import com.swapnil.gita_ai_backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final BookmarkRepository bookmarkRepository;
     private final ChatRepository chatRepository;
+    private final MessageRepository messageRepository;
 
     @GetMapping("/me")
     public String me(Authentication authentication) {
@@ -37,9 +39,11 @@ public class UserController {
 
         UUID userId = user.getId();
 
-        bookmarkRepository.deleteByUserId(userId);
+        messageRepository.deleteByUserId(userId);
 
         chatRepository.deleteByUserId(userId);
+
+        bookmarkRepository.deleteByUserId(userId);
 
         userRepository.deleteById(userId);
     }

@@ -3,6 +3,9 @@ package com.swapnil.gita_ai_backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.util.UUID;
 
 @Getter
@@ -28,6 +31,7 @@ public class Bookmark extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

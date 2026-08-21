@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 @Entity
 @Table(name = "messages")
 @Getter
@@ -19,6 +22,7 @@ public class Message extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "chat_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Chat chat;
 
     @Enumerated(EnumType.STRING)
