@@ -74,8 +74,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleGeminiApiException(
             com.google.genai.errors.ApiException exception) {
 
-        int statusCode = exception.getStatusCode();
-        String message = exception.getMessage();
+        int statusCode = exception.code();
+        String message = exception.message();
+        if (message == null || message.isBlank()) {
+            message = exception.getMessage();
+        }
 
         if (statusCode == 429 || (message != null && (message.contains("RESOURCE_EXHAUSTED") || message.toLowerCase().contains("quota")))) {
             return ResponseEntity
